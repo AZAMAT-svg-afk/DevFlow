@@ -1,14 +1,4 @@
 import json
-from services.task_service import create_task
-from services.task_service import create_task, show_tasks
-from services.task_service import create_task, show_tasks, search_task
-from services.task_service import (
-    create_task,
-    show_tasks,
-    search_task,
-    delete_task
-    
-)
 from services.task_service import (
     create_task,
     show_tasks,
@@ -16,6 +6,7 @@ from services.task_service import (
     delete_task,
     update_task
 )
+
 with open("tasks.json", "r", encoding="utf-8") as file:
     tasks = json.load(file)
 def save_tasks():

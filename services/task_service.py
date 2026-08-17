@@ -12,7 +12,7 @@ def show_tasks(tasks):
         return
 
     for index, task in enumerate(tasks, start=1):
-        print(index, task)
+        print(f"{index}. {task}")
 
 def search_task(tasks):
     search = input("Введите слово для поиска: ")
@@ -27,50 +27,54 @@ def search_task(tasks):
     if not found:
         print("Задача не найдена.")
 
+def get_task_number(tasks, action):
+    try:
+        number = int(input(f"Введите номер задачи для {action}: "))
+
+        if number < 1 or number > len(tasks):
+            print("Такой задачи нет!")
+            return None
+
+        return number - 1
+
+    except ValueError:
+        print("Нужно ввести число!")
+        return None
+    
 def delete_task(tasks, save_tasks):
     show_tasks(tasks)
 
     if not tasks:
         return
 
-    try:
-        number = int(input("Введите номер задачи для удаления: "))
+    index = get_task_number(tasks, "удаления")
 
-        if number < 1 or number > len(tasks):
-            print("Такой задачи нет!")
-            return
+    if index is None:
+        return
 
-        deleted_task = tasks.pop(number - 1)
-        save_tasks()
+    deleted_task = tasks.pop(index)
+    save_tasks()
 
-        print("Задача удалена:", deleted_task)
-
-    except ValueError:
-        print("Нужно ввести число!")
-
+    print("Задача удалена:", deleted_task)
+    
 def update_task(tasks, save_tasks):
     show_tasks(tasks)
 
     if not tasks:
         return
 
-    try:
-        number = int(input("Введите номер задачи для изменения: "))
+    index = get_task_number(tasks, "изменения")
 
-        if number < 1 or number > len(tasks):
-            print("Такой задачи нет!")
-            return
+    if index is None:
+        return
 
-        new_task = input("Новое название: ")
+    new_task = input("Новое название: ")
 
-        if not new_task.strip():
-            print("Название не может быть пустым!")
-            return
+    if not new_task.strip():
+        print("Название не может быть пустым!")
+        return
 
-        tasks[number - 1] = new_task
-        save_tasks()
+    tasks[index] = new_task
+    save_tasks()
 
-        print("Задача изменена:", new_task)
-
-    except ValueError:
-        print("Нужно ввести число!")
+    print("Задача изменена:", new_task)
