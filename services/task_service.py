@@ -1,80 +1,42 @@
-def create_task(tasks, save_tasks):
-    task = input("Название задачи: ")
-    tasks.append(task)
+def create_task(tasks, save_tasks, task_name):
+    tasks.append(task_name)
     save_tasks()
-    print("Задача создана:", task)
+
+    return task_name
+
 
 def show_tasks(tasks):
-    print("Ваши задачи:")
+    return tasks
 
-    if not tasks:
-        print("Задач пока нет.")
-        return
 
-    for index, task in enumerate(tasks, start=1):
-        print(f"{index}. {task}")
-
-def search_task(tasks):
-    search = input("Введите слово для поиска: ")
-
-    found = False
+def search_task(tasks, keyword):
+    found_tasks = []
 
     for task in tasks:
-        if search.lower() in task.lower():
-            print("Найдена задача:", task)
-            found = True
+        if keyword.lower() in task.lower():
+            found_tasks.append(task)
 
-    if not found:
-        print("Задача не найдена.")
+    return found_tasks
 
-def get_task_number(tasks, action):
-    try:
-        number = int(input(f"Введите номер задачи для {action}: "))
 
-        if number < 1 or number > len(tasks):
-            print("Такой задачи нет!")
-            return None
-
-        return number - 1
-
-    except ValueError:
-        print("Нужно ввести число!")
+def delete_task(tasks, save_tasks, task_id):
+    if task_id < 1 or task_id > len(tasks):
         return None
-    
-def delete_task(tasks, save_tasks):
-    show_tasks(tasks)
 
-    if not tasks:
-        return
-
-    index = get_task_number(tasks, "удаления")
-
-    if index is None:
-        return
-
-    deleted_task = tasks.pop(index)
+    deleted_task = tasks.pop(task_id - 1)
     save_tasks()
 
-    print("Задача удалена:", deleted_task)
-    
-def update_task(tasks, save_tasks):
-    show_tasks(tasks)
+    return deleted_task
 
-    if not tasks:
-        return
 
-    index = get_task_number(tasks, "изменения")
-
-    if index is None:
-        return
-
-    new_task = input("Новое название: ")
+def update_task(tasks, save_tasks, task_id, new_task):
+    if task_id < 1 or task_id > len(tasks):
+        return None
 
     if not new_task.strip():
-        print("Название не может быть пустым!")
-        return
+        return None
 
-    tasks[index] = new_task
+    tasks[task_id - 1] = new_task
     save_tasks()
 
-    print("Задача изменена:", new_task)
+    return new_task
