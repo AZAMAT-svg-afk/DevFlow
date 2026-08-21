@@ -1,83 +1,134 @@
-import json
-
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
-from services.task_service import (
+from database import SessionLocal, init_db
+from crud import (
+    get_tasks,
     create_task,
-    show_tasks,
-    search_task,
     delete_task,
     update_task
 )
 
-app = FastAPI(title= "DevFlow API" )
-class Task(BaseModel):
+app = FastAPI(title="DevFlow API")
+
+init_db()
+
+
+class TaskCreate(BaseModel):
     name: str
 
-with open("tasks.json", "r", encoding="utf-8") as file:
-    tasks = json.load(file)
 
-def save_tasks():
-    with open("tasks.json", "w", encoding="utf-8") as file:
-        json.dump(tasks, file, ensure_ascii=False, indent=4)
-        
+def get_db():
+    db = SessionLocal()
+    try:
+        return db
+    finally:
+        db.close()
+
+
 @app.get("/")
 def root():
     return {"message": "DevFlow API is running!"}
 
+
 @app.get("/tasks")
-def get_tasks():
-    return {"tasks": show_tasks(tasks)}
+def read_tasks():
+    db = SessionLocal()
+
+    try:
+        tasks = get_tasks(db)
+
+        return {
+            "tasks": [
+                {
+                    "id": task.id,
+                    "name": task.name
+                }
+                for task in tasks
+            ]
+        }
+    finally:
+        db.close()
+
 
 @app.post("/tasks")
-def add_task(task: Task):
-    created_task = create_task(tasks, save_tasks, task.name)
+def add_task(task: TaskCreate):
+    db = SessionLocal()
 
-    return {
-        "message": "Задача создана",
-        "task": created_task
-    }
-    
+    try:
+        if not task.name.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="Название задачи не может быть пустым!"
+            )
+
+        new_task = create_task(db, task.name)
+
+        return {
+            "message": "Задача создана",
+            "task": {
+                "id": new_task.id,
+                "name": new_task.name
+            }
+        }
+    finally:
+        db.close()
+
+
 @app.delete("/tasks/{task_id}")
 def remove_task(task_id: int):
-    deleted_task = delete_task(tasks, save_tasks, task_id)
+    db = SessionLocal()
 
-    if deleted_task is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Такой задачи нет!"
-        )
+    try:
+        task = delete_task(db, task_id)
 
-    return {
-        "message": "Задача удалена",
-        "task": deleted_task
-    }
-    
+        if task is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Такой задачи нет!"
+            )
+
+        return {
+            "message": "Задача удалена",
+            "task": {
+                "id": task.id,
+                "name": task.name
+            }
+        }
+    finally:
+        db.close()
+
+
 @app.put("/tasks/{task_id}")
-def change_task(task_id: int, task: Task):
-    updated_task = update_task(
-        tasks,
-        save_tasks,
-        task_id,
-        task.name
-    )
+def change_task(task_id: int, task: TaskCreate):
+    db = SessionLocal()
 
-    if updated_task is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Такой задачи нет или название пустое!"
+    try:
+        if not task.name.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="Название задачи не может быть пустым!"
+            )
+
+        updated_task = update_task(
+            db,
+            task_id,
+            task.name
         )
 
-    return {
-        "message": "Задача изменена",
-        "task": updated_task
-    }
-    
-@app.get("/tasks/search")
-def search_tasks(keyword: str = Query(...)):
-    found_tasks = search_task(tasks, keyword)
+        if updated_task is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Такой задачи нет!"
+            )
 
-    return {
-        "results": found_tasks
-    }
+        return {
+            "message": "Задача изменена",
+            "task": {
+                "id": updated_task.id,
+                "name": updated_task.name
+            }
+        }
+    finally:
+        db.close()

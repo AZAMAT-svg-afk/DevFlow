@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 .venv/
 tasks.json
+__pycache__/
+.pytest_cache/
+*.pyc
+*.db
